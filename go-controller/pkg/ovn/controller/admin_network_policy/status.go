@@ -10,6 +10,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metaapplyv1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/klog/v2"
 	anpapiapply "sigs.k8s.io/network-policy-api/pkg/client/applyconfiguration/apis/v1alpha1"
 )
@@ -124,8 +125,9 @@ func (c *Controller) updateANPZoneStatusCondition(newCondition metav1.Condition,
 		existingCondition.Message = newCondition.Message
 		newCondition = *existingCondition
 	}
+	condApply := conditionToApplyConfig(newCondition)
 	applyObj := anpapiapply.AdminNetworkPolicy(anpName).
-		WithStatus(anpapiapply.AdminNetworkPolicyStatus().WithConditions(newCondition))
+		WithStatus(anpapiapply.AdminNetworkPolicyStatus().WithConditions(condApply))
 	_, err = c.anpClientSet.PolicyV1alpha1().AdminNetworkPolicies().
 		ApplyStatus(context.TODO(), applyObj, metav1.ApplyOptions{FieldManager: c.zone, Force: true})
 	if err == nil {
@@ -191,8 +193,9 @@ func (c *Controller) updateBANPZoneStatusCondition(newCondition metav1.Condition
 		existingCondition.Message = newCondition.Message
 		newCondition = *existingCondition
 	}
+	condApply := conditionToApplyConfig(newCondition)
 	applyObj := anpapiapply.BaselineAdminNetworkPolicy(banpName).
-		WithStatus(anpapiapply.BaselineAdminNetworkPolicyStatus().WithConditions(newCondition))
+		WithStatus(anpapiapply.BaselineAdminNetworkPolicyStatus().WithConditions(condApply))
 	_, err = c.anpClientSet.PolicyV1alpha1().BaselineAdminNetworkPolicies().
 		ApplyStatus(context.TODO(), applyObj, metav1.ApplyOptions{FieldManager: c.zone, Force: true})
 	if err == nil {
@@ -200,4 +203,14 @@ func (c *Controller) updateBANPZoneStatusCondition(newCondition metav1.Condition
 			banpName, newCondition.Type, newCondition.Status, newCondition.Reason, newCondition.Message)
 	}
 	return err
+}
+
+func conditionToApplyConfig(c metav1.Condition) *metaapplyv1.ConditionApplyConfiguration {
+	return metaapplyv1.Condition().
+		WithType(c.Type).
+		WithStatus(c.Status).
+		WithObservedGeneration(c.ObservedGeneration).
+		WithReason(c.Reason).
+		WithMessage(c.Message).
+		WithLastTransitionTime(c.LastTransitionTime)
 }

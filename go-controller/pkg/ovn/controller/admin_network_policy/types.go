@@ -451,7 +451,13 @@ func newBaselineAdminNetworkPolicyEgressRule(raw anpapi.BaselineAdminNetworkPoli
 		peerAddresses: sets.New[string](),
 	}
 	for _, peer := range raw.To {
-		banpPeer, err := newAdminNetworkPolicyEgressPeer(peer)
+		anpPeer := anpapi.AdminNetworkPolicyEgressPeer{
+			Namespaces: peer.Namespaces,
+			Pods:       peer.Pods,
+			Nodes:      peer.Nodes,
+			Networks:   peer.Networks,
+		}
+		banpPeer, err := newAdminNetworkPolicyEgressPeer(anpPeer)
 		if err != nil {
 			return nil, err
 		}
