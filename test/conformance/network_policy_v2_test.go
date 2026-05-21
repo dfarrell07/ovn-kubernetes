@@ -53,8 +53,7 @@ func TestNetworkPolicyV2Conformance(t *testing.T) {
 	// Depending on the tests some of them take longer and end up timing
 	// out on context, let's bump the GetTimeout to 300 seconds here.
 	profiles := sets.Set[suite.ConformanceProfileName]{}
-	profiles.Insert(suite.ConformanceProfileName(suite.SupportAdminNetworkPolicy))
-	profiles.Insert(suite.ConformanceProfileName(suite.SupportBaselineAdminNetworkPolicy))
+	profiles.Insert(suite.CNPConformanceProfileName)
 	cSuite, err := suite.NewConformanceProfileTestSuite(
 		suite.ConformanceProfileOptions{
 			Options: suite.Options{
@@ -64,10 +63,8 @@ func TestNetworkPolicyV2Conformance(t *testing.T) {
 				Debug:                showDebug,
 				CleanupBaseResources: shouldCleanup,
 				SupportedFeatures: sets.New(
-					suite.SupportAdminNetworkPolicyEgressNodePeers,
-					suite.SupportBaselineAdminNetworkPolicyEgressNodePeers,
-					suite.SupportAdminNetworkPolicyNamedPorts,
-					suite.SupportBaselineAdminNetworkPolicyNamedPorts,
+					suite.SupportClusterNetworkPolicyEgressNodePeers,
+					suite.SupportClusterNetworkPolicyNamedPorts,
 				),
 				TimeoutConfig: netpolv1config.TimeoutConfig{GetTimeout: 300 * time.Second},
 				// Use fixed port range for host network pods.
